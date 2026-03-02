@@ -1,0 +1,209 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["ActivePage"] = "Dashboard";
+}
+
+<!-- Stats Summary -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Expense Dashboard</h1>
+        <p class="page-subtitle">Overview of all expense claims</p>
+    </div>
+    <a asp-page="/Expenses/Create" class="btn btn-primary">+ New Expense</a>
+</div>
+
+<!-- Summary Cards -->
+<div class="stats-grid">
+    <div class="stat-card stat-card--total">
+        <div class="stat-icon">📋</div>
+        <div class="stat-info">
+            <span class="stat-value">@Model.TotalExpenses</span>
+            <span class="stat-label">Total Expenses</span>
+        </div>
+    </div>
+    <div class="stat-card stat-card--draft">
+        <div class="stat-icon">✏️</div>
+        <div class="stat-info">
+            <span class="stat-value">@Model.DraftCount</span>
+            <span class="stat-label">Draft</span>
+        </div>
+    </div>
+    <div class="stat-card stat-card--submitted">
+        <div class="stat-icon">📤</div>
+        <div class="stat-info">
+            <span class="stat-value">@Model.SubmittedCount</span>
+            <span class="stat-label">Pending Approval</span>
+        </div>
+    </div>
+    <div class="stat-card stat-card--approved">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info">
+            <span class="stat-value">@Model.ApprovedCount</span>
+            <span class="stat-label">Approved</span>
+        </div>
+    </div>
+    <div class="stat-card stat-card--amount">
+        <div class="stat-icon">💷</div>
+        <div class="stat-info">
+            <span class="stat-value">£@Model.TotalApprovedAmount.ToString("N2")</span>
+            <span class="stat-label">Total Approved</span>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card filter-card">
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <label for="statusId" class="filter-label">Status</label>
+            <select id="statusId" name="statusId" class="filter-select">
+                <option value="">All Statuses</option>
+                @foreach (var status in Model.Statuses)
+                {
+                    <option value="@status.StatusId" selected="@(Model.FilterStatusId == status.StatusId)">
+                        @status.StatusName
+                    </option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="userId" class="filter-label">Employee</label>
+            <select id="userId" name="userId" class="filter-select">
+                <option value="">All Employees</option>
+                @foreach (var user in Model.Users)
+                {
+                    <option value="@user.UserId" selected="@(Model.FilterUserId == user.UserId)">
+                        @user.UserName
+                    </option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="dateFrom" class="filter-label">From Date</label>
+            <input type="date" id="dateFrom" name="dateFrom" class="filter-input"
+                   value="@Model.FilterDateFrom?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="filter-group">
+            <label for="dateTo" class="filter-label">To Date</label>
+            <input type="date" id="dateTo" name="dateTo" class="filter-input"
+                   value="@Model.FilterDateTo?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-secondary">Filter</button>
+            <a asp-page="/Index" class="btn btn-ghost">Clear</a>
+        </div>
+    </form>
+</div>
+
+<!-- Expenses Table -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Expense Claims</h2>
+        <span class="badge">@Model.Expenses.Count() results</span>
+    </div>
+    @if (!Model.Expenses.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <p>No expenses found matching your filters.</p>
+            <a asp-page="/Expenses/Create" class="btn btn-primary">Create First Expense</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Employee</th>
+                        <th>Category</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var expense in Model.Expenses)
+                    {
+                        <tr>
+                            <td class="text-muted">@expense.ExpenseId</td>
+                            <td>
+                                <div class="user-cell">
+                                    <div class="avatar">@expense.UserName[0]</div>
+                                    <span>@expense.UserName</span>
+                                </div>
+                            </td>
+                            <td>@expense.CategoryName</td>
+                            <td>@expense.ExpenseDate.ToString("dd MMM yyyy")</td>
+                            <td class="amount-cell">£@expense.AmountDecimal.ToString("N2")</td>
+                            <td class="desc-cell" title="@expense.Description">
+                                @(expense.Description?.Length > 40 ? expense.Description[..40] + "…" : expense.Description ?? "—")
+                            </td>
+                            <td>
+                                <span class="status-badge status-@expense.StatusName.ToLower()">
+                                    @expense.StatusName
+                                </span>
+                            </td>
+                            <td class="actions-cell">
+                                <a asp-page="/Expenses/Detail" asp-route-id="@expense.ExpenseId" class="btn-icon" title="View">👁</a>
+                                @if (expense.StatusName == "Draft")
+                                {
+                                    <a asp-page="/Expenses/Create" asp-route-id="@expense.ExpenseId" class="btn-icon" title="Edit">✏️</a>
+                                    <button class="btn-icon btn-submit"
+                                            data-expense-id="@expense.ExpenseId"
+                                            title="Submit for Approval"
+                                            onclick="submitExpense(@expense.ExpenseId)">📤</button>
+                                }
+                                @if (expense.StatusName == "Submitted")
+                                {
+                                    <button class="btn-icon btn-approve"
+                                            data-expense-id="@expense.ExpenseId"
+                                            title="Approve"
+                                            onclick="reviewExpense(@expense.ExpenseId, 'approve')">✅</button>
+                                    <button class="btn-icon btn-reject"
+                                            data-expense-id="@expense.ExpenseId"
+                                            title="Reject"
+                                            onclick="reviewExpense(@expense.ExpenseId, 'reject')">❌</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+async function submitExpense(expenseId) {
+    if (!confirm('Submit this expense for approval?')) return;
+    try {
+        const res = await fetch(`/api/expenses/${expenseId}/submit`, { method: 'POST' });
+        if (res.ok) { location.reload(); } 
+        else { alert('Failed to submit expense.'); }
+    } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function reviewExpense(expenseId, action) {
+    const verb = action === 'approve' ? 'approve' : 'reject';
+    if (!confirm(`${verb.charAt(0).toUpperCase() + verb.slice(1)} this expense?`)) return;
+    // Default reviewer = first manager (userId 2 in sample data)
+    const reviewedBy = 2;
+    try {
+        const res = await fetch(`/api/expenses/${expenseId}/${verb}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reviewedBy })
+        });
+        if (res.ok) { location.reload(); }
+        else { alert(`Failed to ${verb} expense.`); }
+    } catch(e) { alert('Error: ' + e.message); }
+}
+</script>
+}

@@ -1,0 +1,109 @@
+@page
+@model ExpenseManagement.Pages.Expenses.CreateModel
+@{
+    ViewData["Title"] = Model.IsEdit ? "Edit Expense" : "New Expense";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">@(Model.IsEdit ? "Edit Expense" : "New Expense")</h1>
+        <p class="page-subtitle">@(Model.IsEdit ? "Update the expense details below" : "Fill in the expense details below")</p>
+    </div>
+    <a asp-page="/Index" class="btn btn-ghost">← Back to Dashboard</a>
+</div>
+
+<div class="form-card">
+    <form method="post">
+        <input type="hidden" asp-for="ExpenseId" />
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label asp-for="UserId" class="form-label">Employee <span class="required">*</span></label>
+                <select asp-for="UserId" class="form-control" required>
+                    <option value="">Select employee...</option>
+                    @foreach (var user in Model.Users)
+                    {
+                        <option value="@user.UserId" selected="@(Model.UserId == user.UserId)">
+                            @user.UserName (@user.RoleName)
+                        </option>
+                    }
+                </select>
+                <span asp-validation-for="UserId" class="form-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="CategoryId" class="form-label">Category <span class="required">*</span></label>
+                <select asp-for="CategoryId" class="form-control" required>
+                    <option value="">Select category...</option>
+                    @foreach (var cat in Model.Categories)
+                    {
+                        <option value="@cat.CategoryId" selected="@(Model.CategoryId == cat.CategoryId)">
+                            @cat.CategoryName
+                        </option>
+                    }
+                </select>
+                <span asp-validation-for="CategoryId" class="form-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Amount (£) <span class="required">*</span></label>
+                <input type="number" id="amountDisplay" step="0.01" min="0.01" class="form-control"
+                       value="@(Model.AmountMinor / 100.0m)"
+                       placeholder="0.00" required
+                       onchange="updateAmountMinor(this.value)" />
+                <input type="hidden" asp-for="AmountMinor" id="amountMinor" />
+                <span class="form-hint">Enter amount in pounds (e.g. 12.50 for £12.50)</span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="ExpenseDate" class="form-label">Expense Date <span class="required">*</span></label>
+                <input asp-for="ExpenseDate" type="date" class="form-control" required
+                       value="@Model.ExpenseDate.ToString("yyyy-MM-dd")" />
+                <span asp-validation-for="ExpenseDate" class="form-error"></span>
+            </div>
+
+            <div class="form-group form-group--full">
+                <label asp-for="Description" class="form-label">Description</label>
+                <textarea asp-for="Description" class="form-control form-textarea"
+                          placeholder="Describe the expense..." rows="3">@Model.Description</textarea>
+                <span asp-validation-for="Description" class="form-error"></span>
+            </div>
+
+            <div class="form-group form-group--full">
+                <label asp-for="ReceiptFile" class="form-label">Receipt Reference</label>
+                <input asp-for="ReceiptFile" type="text" class="form-control"
+                       placeholder="e.g. /receipts/alice/taxi_oct20.jpg" />
+                <span class="form-hint">Path or reference to the receipt file</span>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                @(Model.IsEdit ? "💾 Update Expense" : "💾 Save Expense")
+            </button>
+            @if (!Model.IsEdit)
+            {
+                <button type="submit" name="submitAfter" value="true" class="btn btn-secondary">
+                    📤 Save &amp; Submit
+                </button>
+            }
+            <a asp-page="/Index" class="btn btn-ghost">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+function updateAmountMinor(valueStr) {
+    const val = parseFloat(valueStr);
+    if (!isNaN(val) && val >= 0) {
+        document.getElementById('amountMinor').value = Math.round(val * 100);
+    }
+}
+// Initialise on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const display = document.getElementById('amountDisplay');
+    if (display && display.value) updateAmountMinor(display.value);
+});
+</script>
+}

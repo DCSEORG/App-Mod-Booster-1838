@@ -1,0 +1,146 @@
+@page "{id:int}"
+@model ExpenseManagement.Pages.Expenses.DetailModel
+@{
+    ViewData["Title"] = $"Expense #{Model.Expense?.ExpenseId}";
+}
+
+@if (Model.Expense == null)
+{
+    <div class="page-header">
+        <h1 class="page-title">Expense Not Found</h1>
+    </div>
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <p>The requested expense could not be found.</p>
+            <a asp-page="/Index" class="btn btn-primary">Back to Dashboard</a>
+        </div>
+    </div>
+}
+else
+{
+    var e = Model.Expense;
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Expense #@e.ExpenseId</h1>
+            <p class="page-subtitle">Created @e.CreatedAt.ToString("dd MMM yyyy HH:mm") UTC</p>
+        </div>
+        <div class="header-actions">
+            @if (e.StatusName == "Draft")
+            {
+                <a asp-page="/Expenses/Create" asp-route-id="@e.ExpenseId" class="btn btn-secondary">✏️ Edit</a>
+                <button class="btn btn-primary" onclick="submitExpense(@e.ExpenseId)">📤 Submit for Approval</button>
+            }
+            @if (e.StatusName == "Submitted")
+            {
+                <button class="btn btn-success" onclick="reviewExpense(@e.ExpenseId, 'approve')">✅ Approve</button>
+                <button class="btn btn-danger" onclick="reviewExpense(@e.ExpenseId, 'reject')">❌ Reject</button>
+            }
+            <a asp-page="/Index" class="btn btn-ghost">← Dashboard</a>
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <div class="card detail-card">
+            <h2 class="card-title">Expense Details</h2>
+            <dl class="detail-list">
+                <div class="detail-row">
+                    <dt>Status</dt>
+                    <dd><span class="status-badge status-@e.StatusName.ToLower()">@e.StatusName</span></dd>
+                </div>
+                <div class="detail-row">
+                    <dt>Employee</dt>
+                    <dd>
+                        <div class="user-cell">
+                            <div class="avatar">@e.UserName[0]</div>
+                            <div>
+                                <span>@e.UserName</span>
+                                <small class="text-muted">@e.UserEmail</small>
+                            </div>
+                        </div>
+                    </dd>
+                </div>
+                <div class="detail-row">
+                    <dt>Category</dt>
+                    <dd>@e.CategoryName</dd>
+                </div>
+                <div class="detail-row">
+                    <dt>Amount</dt>
+                    <dd class="amount-large">£@e.AmountDecimal.ToString("N2") @e.Currency</dd>
+                </div>
+                <div class="detail-row">
+                    <dt>Expense Date</dt>
+                    <dd>@e.ExpenseDate.ToString("dd MMMM yyyy")</dd>
+                </div>
+                <div class="detail-row">
+                    <dt>Description</dt>
+                    <dd>@(e.Description ?? "—")</dd>
+                </div>
+                @if (!string.IsNullOrEmpty(e.ReceiptFile))
+                {
+                    <div class="detail-row">
+                        <dt>Receipt</dt>
+                        <dd><code>@e.ReceiptFile</code></dd>
+                    </div>
+                }
+            </dl>
+        </div>
+
+        <div class="card detail-card">
+            <h2 class="card-title">Workflow History</h2>
+            <div class="timeline">
+                <div class="timeline-item timeline-item--done">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <strong>Created</strong>
+                        <span>@e.CreatedAt.ToString("dd MMM yyyy HH:mm") UTC</span>
+                        <span class="text-muted">by @e.UserName</span>
+                    </div>
+                </div>
+                @if (e.SubmittedAt.HasValue)
+                {
+                    <div class="timeline-item timeline-item--done">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <strong>Submitted for Approval</strong>
+                            <span>@e.SubmittedAt.Value.ToString("dd MMM yyyy HH:mm") UTC</span>
+                        </div>
+                    </div>
+                }
+                @if (e.ReviewedAt.HasValue)
+                {
+                    <div class="timeline-item timeline-item--done">
+                        <div class="timeline-dot timeline-dot--@(e.StatusName == "Approved" ? "success" : "danger")"></div>
+                        <div class="timeline-content">
+                            <strong>@e.StatusName</strong>
+                            <span>@e.ReviewedAt.Value.ToString("dd MMM yyyy HH:mm") UTC</span>
+                            <span class="text-muted">by @(e.ReviewedByName ?? "Manager")</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+async function submitExpense(expenseId) {
+    if (!confirm('Submit this expense for approval?')) return;
+    const res = await fetch(`/api/expenses/${expenseId}/submit`, { method: 'POST' });
+    if (res.ok) location.reload();
+    else alert('Failed to submit expense.');
+}
+async function reviewExpense(expenseId, action) {
+    if (!confirm(`${action === 'approve' ? 'Approve' : 'Reject'} this expense?`)) return;
+    const reviewedBy = 2;
+    const res = await fetch(`/api/expenses/${expenseId}/${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewedBy })
+    });
+    if (res.ok) location.reload();
+    else alert(`Failed to ${action} expense.`);
+}
+</script>
+}
