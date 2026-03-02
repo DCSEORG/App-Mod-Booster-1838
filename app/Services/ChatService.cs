@@ -203,9 +203,12 @@ public class ChatService : IChatService
                 }
             };
 
-            // Function calling loop
-            while (true)
+            // Function calling loop (max 10 iterations to prevent runaway execution)
+            const int maxIterations = 10;
+            int iteration = 0;
+            while (iteration < maxIterations)
             {
+                iteration++;
                 var response = await chatClient.CompleteChatAsync(messages, options);
                 var completion = response.Value;
 
@@ -229,6 +232,7 @@ public class ChatService : IChatService
                     return completion.Content[0].Text;
                 }
             }
+            return "I'm sorry, the response took too many steps to complete. Please try a simpler request.";
         }
         catch (Exception ex)
         {

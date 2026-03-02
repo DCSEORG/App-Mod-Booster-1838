@@ -171,6 +171,15 @@ echo "Step 10: Deploying stored procedures..."
 python3 run-sql-stored-procs.py
 echo "  ✓ Stored procedures deployed"
 
+# Restore Python scripts to placeholder values for future runs
+sed -i.bak "s|SERVER = \"${SQL_SERVER_FQDN}\"|SERVER = \"example.database.windows.net\"|g" run-sql.py && rm -f run-sql.py.bak
+sed -i.bak "s|DATABASE = \"${DATABASE_NAME}\"|DATABASE = \"Northwind\"|g" run-sql.py && rm -f run-sql.py.bak
+sed -i.bak "s|SERVER = \"${SQL_SERVER_FQDN}\"|SERVER = \"example.database.windows.net\"|g" run-sql-dbrole.py && rm -f run-sql-dbrole.py.bak
+sed -i.bak "s|DATABASE = \"${DATABASE_NAME}\"|DATABASE = \"Northwind\"|g" run-sql-dbrole.py && rm -f run-sql-dbrole.py.bak
+sed -i.bak "s|SERVER = \"${SQL_SERVER_FQDN}\"|SERVER = \"example.database.windows.net\"|g" run-sql-stored-procs.py && rm -f run-sql-stored-procs.py.bak
+sed -i.bak "s|DATABASE = \"${DATABASE_NAME}\"|DATABASE = \"Northwind\"|g" run-sql-stored-procs.py && rm -f run-sql-stored-procs.py.bak
+echo "  ✓ Python scripts restored to placeholder values"
+
 # ─── 11. Build and Deploy Application ─────────────────────────────────────────
 echo ""
 echo "Step 11: Building and deploying application..."
