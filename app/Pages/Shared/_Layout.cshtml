@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Expense Management</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Error Banner (shown when DB connection fails) -->
+    @if (ViewData["DbError"] != null)
+    {
+        <div class="error-banner">
+            <div class="error-banner-content">
+                <div class="error-banner-icon">⚠️</div>
+                <div class="error-banner-text">
+                    <strong>Database Connection Issue — Showing Demo Data</strong>
+                    <p>@ViewData["DbError"]</p>
+                    @if (ViewData["DbErrorDetail"] != null)
+                    {
+                        <details>
+                            <summary>Technical Details &amp; Fix</summary>
+                            <pre>@ViewData["DbErrorDetail"]</pre>
+                        </details>
+                    }
+                </div>
+                <button class="error-banner-close" onclick="this.parentElement.parentElement.style.display='none'">✕</button>
+            </div>
+        </div>
+    }
+
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="28" height="28" rx="8" fill="#4F46E5"/>
+                <path d="M8 14h12M14 8v12" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>ExpenseTrack</span>
+        </div>
+        <div class="navbar-links">
+            <a asp-page="/Index" class="nav-link @(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active" : "")">
+                Dashboard
+            </a>
+            <a asp-page="/Expenses/Create" class="nav-link">
+                + New Expense
+            </a>
+            <a href="/swagger" target="_blank" class="nav-link">
+                API Docs
+            </a>
+            <a href="/chatui/index.html" class="nav-link nav-link-chat">
+                💬 AI Assistant
+            </a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        @RenderBody()
+    </main>
+
+    <footer class="footer">
+        <p>Expense Management System &copy; @DateTime.Now.Year | 
+           <a href="/swagger" target="_blank">Swagger API</a> | 
+           <a href="/chatui/index.html">AI Chat</a>
+        </p>
+    </footer>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,49 @@
+# Gitignore for Expense Management App Modernisation
+# NOTE: app.zip is intentionally NOT excluded so it can be committed and used in deployment scripts
+
+# .NET build artifacts
+**/bin/
+**/obj/
+**/publish/
+*.user
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# IDE and editor files
+.vs/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.docstates
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Secrets and environment
+.env
+.env.local
+*.pfx
+*.key
+appsettings.Production.json
+
+# Temp files
+*.bak
+*.tmp
+script.sql.bak
